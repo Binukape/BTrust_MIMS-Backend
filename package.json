@@ -1,0 +1,26 @@
+{
+  "name": "btrust-mims-backend",
+  "version": "1.0.0",
+  "description": "Express REST API for the B-Trust Microbanking and Interest Management System (raw parameterized SQL, no ORM)",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test:smoke": "node scripts/smoke-test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.5",
+    "express": "^4.22.3",
+    "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.24.5",
+    "pdfkit": "^0.20.2"
+  }
+}

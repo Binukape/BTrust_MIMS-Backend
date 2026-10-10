@@ -1,32 +1,12 @@
 import { one } from './dbService.js';
-// import utils
+// import utils added
+
+import { forbidden, notFound } from '../utils/errors.js';
+import { id as toId } from '../utils/validate.js';
 
 
-// Temporary functions instead utils to test
 
-function forbidden(message = 'You are not allowed to do this') {
-  const err = new Error(message);
-  err.status = 403;
-  return err;
-}
 
-function notFound(message = 'Not found') {
-  const err = new Error(message);
-  err.status = 404;
-  return err;
-}
-
-function toId(value, label = 'id') {
-  const n = Number(value);
-  if (!Number.isInteger(n) || n <= 0) {
-    const err = new Error(`${label} must be a positive whole number`);
-    err.status = 400;
-    throw err;
-  }
-  return n;
-}
-
-//
 
 
 export async function assertAccountAccess(user, rawAccountId) {

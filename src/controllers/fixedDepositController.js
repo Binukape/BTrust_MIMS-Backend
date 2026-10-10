@@ -1,45 +1,11 @@
 import { query, one, callProcedure } from '../services/dbService.js';
 import { assertAccountAccess } from '../services/access.js';
 
-// Temporary functions instead of utils to test
+// Added utility import
+import { notFound } from '../utils/errors.js';
+import { id as toId, money } from '../utils/validate.js';
 
-function notFound(message = 'Not found') {
-  const err = new Error(message);
-  err.status = 404;
-  return err;
-}
 
-function toId(value, label = 'id') {
-  const n = Number(value);
-  if (!Number.isInteger(n) || n <= 0) {
-    const err = new Error(`${label} must be a positive whole number`);
-    err.status = 400;
-    throw err;
-  }
-  return n;
-}
-
-function money(value, label = 'amount') {
-  const text = typeof value === 'number' ? String(value) : value;
-
-  if (typeof text !== 'string' || !/^\d{1,13}(\.\d{1,2})?$/.test(text.trim())) {
-    const err = new Error(`${label} must be a positive amount with at most 2 decimals`);
-    err.status = 400;
-    throw err;
-  }
-
-  const cleaned = text.trim();
-
-  if (Number(cleaned) <= 0) {
-    const err = new Error(`${label} must be greater than zero`);
-    err.status = 400;
-    throw err;
-  }
-
-  return cleaned;
-}
-
-//
 
 const FD_SELECT = `SELECT f.fd_id, f.account_id, sa.account_number, fp.tenure_months, f.principal_amount,
   f.interest_rate_snapshot, fp.early_closure_penalty_days, f.start_date, f.maturity_date,

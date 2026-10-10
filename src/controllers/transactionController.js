@@ -1,60 +1,11 @@
 import { query, callProcedure } from '../services/dbService.js';
 import { assertAccountAccess } from '../services/access.js';
 
-//import utilities
+// Added utility imports
 
+import { badRequest } from '../utils/errors.js';
+import { id as toId, money, optionalDate } from '../utils/validate.js';
 
-// Temporary functions instead of utils to test
-
-function badRequest(message) {
-  const err = new Error(message);
-  err.status = 400;
-  return err;
-}
-
-function toId(value, label = 'id') {
-  const n = Number(value);
-  if (!Number.isInteger(n) || n <= 0) {
-    throw badRequest(`${label} must be a positive whole number`);
-  }
-  return n;
-}
-
-function money(value, label = 'amount') {
-  const text = typeof value === 'number' ? String(value) : value;
-
-  if (typeof text !== 'string' || !/^\d{1,13}(\.\d{1,2})?$/.test(text.trim())) {
-    throw badRequest(`${label} must be a positive amount with at most 2 decimals`);
-  }
-
-  const cleaned = text.trim();
-
-  if (Number(cleaned) <= 0) {
-    throw badRequest(`${label} must be greater than zero`);
-  }
-
-  return cleaned;
-}
-
-function optionalDate(value, label) {
-  if (value === undefined || value === null || value === '') {
-    return null;
-  }
-
-  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    throw badRequest(`${label} must be in YYYY-MM-DD format`);
-  }
-
-  const d = new Date(`${value}T00:00:00Z`);
-
-  if (Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== value) {
-    throw badRequest(`${label} is not a real date`);
-  }
-
-  return value;
-}
-
-//
 
 const TYPES = [
   'DEPOSIT', 'WITHDRAWAL', 'SAVINGS_INTEREST_CREDIT', 'FD_INTEREST_CREDIT',

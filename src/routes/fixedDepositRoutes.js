@@ -1,32 +1,13 @@
 import { Router } from 'express';
-// import middleware
+// Added middleware import
+import { authenticateJWT } from '../middleware/authenticateJWT.js';
+import { requireRole } from '../middleware/requireRole.js';
 import {
   listFixedDeposits, getFixedDeposit, openFixedDeposit, earlyClosurePreview, closeEarly,
 } from '../controllers/fixedDepositController.js';
 
 const router = Router();
 
-// Temporary middleware for testing
-
-function authenticateJWT(req, _res, next) {
-  req.user = {
-    role: 'customer',
-    customerId: 1,
-    agentId: null,
-  };
-  next();
-}
-
-function requireRole(...roles) {
-  return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ error: 'Forbidden' });
-    }
-    next();
-  };
-}
-
-//
 
 router.use(authenticateJWT);
 

@@ -1,19 +1,10 @@
 import { Router } from 'express';
-// import middleware
+// Added import middleware
+import { authenticateJWT } from '../middleware/authenticateJWT.js';
 import { listSavingsPlans, listFdPlans } from '../controllers/fixedDepositController.js';
 
 const router = Router();
 
-// Temporary middleware for testing
-function authenticateJWT(req, _res, next) {
-  req.user = {
-    role: 'customer',
-    customerId: 1,
-    agentId: null,
-  };
-  next();
-}
-// 
 
 
 router.use(authenticateJWT);

@@ -5,31 +5,14 @@ import {
     listTransactions
 } from "../controllers/transactionController.js";
 
-// import middleware
-
+// Added import middleware
+import { authenticateJWT } from '../middleware/authenticateJWT.js';
+import { requireRole } from '../middleware/requireRole.js';
 
 
 const router = Router();
 
-// Temporary middleware for testing
 
-function authenticateJWT(req, _res, next) {
-  req.user = {
-    role: 'customer',
-    customerId: 1,
-    agentId: null,
-  };
-  next();
-}
-
-function requireRole(...roles) {
-  return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ error: 'Forbidden' });
-    }
-    next();
-  };
-}
 
 router.use(authenticateJWT);
 

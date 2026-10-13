@@ -6,7 +6,7 @@ It talks to MySQL with raw, parameterized SQL (`mysql2`) and calls the stored pr
 ## Run it locally
 
 1. Start the database from the BTrust-MIMS-DB repository: `docker compose up -d`, then create the sample transactions once: `docker compose exec db mysql -uroot -prootpassword mims_db -e "CALL sp_seed_sample_transactions(100);"` (database on host port 3307).
-2. Copy `.env.example` to `.env` and fill it in (`DB_PORT=3307`; the local dev passwords are in `init/10_users_dev.sql` of the database repository).
+2. Copy `.env.example` to `.env` and fill it in (`DB_PORT=3307`; when the `MIMS_*_PASSWORD` variables are not set, the local database accounts use the dev passwords `dev_app_pw` and `dev_reports_pw`, see `init/10_users.sh` in the database repository).
 3. Install and start:
 
 ```bash
@@ -26,7 +26,7 @@ The API listens on port 4000. `GET /health` answers `{"status":"ok"}`.
 | `JWT_SECRET`, `JWT_EXPIRES_IN` | signing key and lifetime of login tokens |
 | `ALLOWED_ORIGIN` | the frontend's address: used for CORS and the Referer/Origin check |
 
-Never commit `.env`. On Aiven and Render the passwords are set in their consoles / environment settings.
+Never commit `.env`. On the Azure server the values come from `/opt/mims/.env`, which is never committed.
 
 ## How it is organised
 
@@ -66,13 +66,29 @@ scripts/smoke-test.js   end-to-end test of the API (77 checks)
 | Reports | `GET /reports/:type?from=&to=`, `GET /reports/:type/export?format=csv\|pdf` (types: `agent-wise`, `account-wise`, `active-fds`, `interest-distribution` (admin only), `customer-activity`) | agent, admin |
 | Audit | `GET /audit-log?table=` | admin |
 
-## Docker image
+## Docker image and deployment
 
 The `Dockerfile` builds a production image (Node 22, runs `node src/server.js` as the `node` user on port 4000). Settings are passed as environment variables.
 
 ```bash
 docker build -t btrust-mims-backend .
 ```
+
+Pushing to `main` runs `.github/workflows/deploy.yml`: it checks the code (`npm ci`, `node --check src/server.js`), builds the image, pushes it to ghcr.io as `btrust-mims-backend:latest` and with the commit id, then updates the Azure server (`docker compose pull backend` and `up -d`) and checks `/api/health` on the public site. Pull requests only run the check. A change that also needs a database change must wait for the database repository's Reset database workflow.
+
+## Demo logins
+
+Live site: https://btrust-mims-xyz.centralindia.cloudapp.azure.com
+
+Every seeded login uses the demo password `password123`.
+
+| Role | Usernames |
+|---|---|
+| Administrator | `admin.demo` |
+| Agents | `nimal.perera`, `kamala.silva`, `sunil.bandara`, `priya.rajapaksa`, `kumar.selvam` |
+| Customers | `anura.fernando`, `dilani.wick`, `somasiri.g`, `tharindu.j`, `sithumini.p`, `ruwan.k`, `chamara.r`, `ishara.desilva`, `priyantha.w`, `nadeeka.a`, `kavindu.s`, `malithi.g`, `vishwa.b`, `sanduni.r`, `buddhika.e` |
+
+Which agent, account and plan belongs to each customer is listed in the README of the BTrust-MIMS-DB repository.
 
 ## Testing
 
@@ -81,3 +97,25 @@ With the API and the seeded database running:
 ```bash
 npm run test:smoke
 ```
+
+## Contributions
+
+| Member | Work in this repository |
+|---|---|
+| Pranav M.A. | setup, database service and access checks, deposit and withdraw endpoints, fixed deposit endpoints, plan lookup routes, the app wiring and server entry |
+| Ranathunga N.R.A.K.H.K. | JWT authentication and role checks, login, branch endpoints, agent endpoints, audit log endpoint, referer check and login limiter |
+| Jackson J.W. | shared utilities, customer registration and listing, account opening and status changes |
+| Isiwara M.A.G.A. | error handler, environment example, CSV and PDF export, report endpoints, the 77-check API smoke test |
+| Perera K.D.B.M. (Binuka) | Dockerfile, `.dockerignore`, README, deployment workflow |
+
+### Files per person
+
+**Pranav M.A.** (14 files): `package.json`, `package-lock.json`, `.gitignore`, `src/config/db.js`, `src/config/env.js`, `src/services/access.js`, `src/services/dbService.js`, `src/controllers/transactionController.js`, `src/routes/transactionRoutes.js`, `src/controllers/fixedDepositController.js`, `src/routes/fixedDepositRoutes.js`, `src/routes/referenceRoutes.js`, `src/app.js`, `src/server.js`
+
+**Ranathunga N.R.A.K.H.K.** (12 files): `src/middleware/authenticateJWT.js`, `src/middleware/requireRole.js`, `src/controllers/authController.js`, `src/routes/authRoutes.js`, `src/controllers/branchController.js`, `src/routes/branchRoutes.js`, `src/controllers/agentController.js`, `src/routes/agentRoutes.js`, `src/controllers/auditController.js`, `src/routes/auditRoutes.js`, `src/middleware/checkReferer.js`, `src/middleware/loginLimiter.js`
+
+**Jackson J.W.** (7 files): `src/utils/dates.js`, `src/utils/errors.js`, `src/utils/validate.js`, `src/controllers/customerController.js`, `src/routes/customerRoutes.js`, `src/controllers/accountController.js`, `src/routes/accountRoutes.js`
+
+**Isiwara M.A.G.A.** (6 files): `src/middleware/errorHandler.js`, `.env.example`, `src/reports/exporters.js`, `src/controllers/reportController.js`, `src/routes/reportRoutes.js`, `scripts/smoke-test.js`
+
+**Perera K.D.B.M. (Binuka)**: `Dockerfile`, `.dockerignore`, `README.md`, `.github/workflows/deploy.yml`
